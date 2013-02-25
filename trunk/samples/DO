@@ -1,0 +1,92 @@
+#!/usr/bin/env node
+(function(global){
+
+	var args = process.argv.slice(2),
+		DigitalOcean = require('../do-js/do'),
+		DO = new DigitalOcean({
+						clientId: 'xxxxxxxxxxxxxxxxxxxxx',					// replace with your client key
+						apiKey: 'KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK' // replace with your API key
+					});
+
+	switch(args[0]) {
+	case "list":
+		DO.droplets.list(function(droplets) {
+			for (var i = 0; i < droplets.length; i++) {
+				var droplet = droplets[i];
+				console.log(droplet.name + ' ' + droplet.id + ' ' + droplet.status);
+			}
+		});
+		break;
+	default:
+		DO.droplets.getByName(args[0], function(droplet) {
+			if (droplet) {
+				switch(args[1]) {
+				case "info":
+					console.log(droplet);
+					break;
+				case "backups":
+					console.log(droplet.backups_active);
+					break;
+				case "ipaddress":
+					console.log(droplet.ip_address);
+					break;
+				case "status":
+					console.log(droplet.status);
+					break;
+
+				case "shutdown":
+					DO.droplets.shutdown(droplet.id,
+						function(event) {
+							if (!event.action_status) {
+								console.log((event.percentage||0) + '%');
+							} else {
+								console.log(event.action_status);
+							}
+						}
+					);
+					break;
+
+				case "reboot":
+					DO.droplets.reboot(droplet.id,
+						function(event) {
+							if (!event.action_status) {
+								console.log((event.percentage||0) + '%');
+							} else {
+								console.log(event.action_status);
+							}
+						}
+					);
+					break;
+
+				case "power":
+					DO.droplets.power(droplet.id, args[2] == "on", 
+						function(event) {
+							if (!event.action_status) {
+								console.log((event.percentage||0) + '%');
+							} else {
+								console.log(event.action_status);
+							}
+						}
+					);
+					break;
+
+				case "snapshot":
+					DO.droplets.snapshot(droplet.id, args[2],
+						function(event) {
+							if (!event.action_status) {
+								console.log((event.percentage||0) + '%');
+							} else {
+								console.log(event.action_status);
+							}
+						}
+					);
+					break;
+
+				}
+			} else {
+				console.log('droplet ' + args[0] + ' does not exist');
+			}
+		});
+	}
+
+})(global);
